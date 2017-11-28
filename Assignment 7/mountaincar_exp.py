@@ -13,7 +13,6 @@ from rl_glue import *  # Required for RL-Glue
 from tiles3 import *
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
-from matplotlib import cm
 RLGlue("mountaincar", "sarsa_lambda_agent")
 
 import numpy as np
@@ -68,7 +67,7 @@ if __name__ == "__main__":
                     X[index] = 1.0
                 values.append(-np.dot(W, X))
             height = np.amax(values)
-            Z[i][j] = height
+            Z[j][i] = height
             fout.write(repr(height)+'')
         fout.write('\n')
     fout.close()
