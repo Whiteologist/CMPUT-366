@@ -128,14 +128,21 @@ def agent_cleanup():
 
 
 def agent_message(in_message):  # returns string, in_message: string
-    global Q, W
+    global iht, numTilings, sizeOfTilings, Q, W
     """
     Arguments: in_message: string
     returns: The value function as a string.
     This function is complete. You do not need to add code here.
     """
     # should not need to modify this function. Modify at your own risk
-    if in_message == 'ValueFunction':
+    if in_message == 'LearningCurve':
+        iht = IHT(4096)
+        numTilings = 8
+        sizeOfTilings = [8, 8]
+        return
+    elif in_message == '3D-Plot':
+        return
+    elif in_message == 'ValueFunction':
         return Q
     elif in_message == 'WeightVector':
         return W

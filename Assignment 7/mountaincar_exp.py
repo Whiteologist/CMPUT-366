@@ -29,6 +29,7 @@ if __name__ == "__main__":
 
     for r in range(num_runs):
         print "run number : ", r+1
+        RL_agent_message("LearningCurve")
         RL_init()
         for e in range(num_episodes):
             # print '\tepisode {}'.format(e+1)
