@@ -9,18 +9,13 @@
 
 """
 
+import numpy as np
 from rl_glue import *  # Required for RL-Glue
-from tiles3 import *
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
 RLGlue("mountaincar", "sarsa_lambda_agent")
 
-import numpy as np
-
-iht = IHT(4096)
-
 if __name__ == "__main__":
-
     # learning curve of Sarsa(lambda) agent
     num_episodes = 200
     num_runs = 50
@@ -43,12 +38,10 @@ if __name__ == "__main__":
 
     for r in range(num_runs):
         print "Computing state-values..."
-        RL_agent_message("3D-Plot")
         RL_init()
         for e in range(num_episodes):
             # print '\tepisode {}'.format(e+1)
             RL_episode(0)
-            W = RL_agent_message("ValueFunction")
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
@@ -58,27 +51,21 @@ if __name__ == "__main__":
     x = np.arange(-1.2, 0.5, 1.7 / steps)
     y = np.arange(-0.07, 0.07, 0.14 / steps)
     x, y = np.meshgrid(x, y)
-    Z = np.zeros([steps, steps])
+    Q = RL_agent_message("ValueFunction")
     for i in range(steps):
         for j in range(steps):
-            values = []
-            for a in range(3):
-                X = np.zeros(len(W))
-                for index in tiles(iht, 8, [-1.2 + (i * 1.7 / steps), -0.07 + (j * 0.14 / steps)], [a]):
-                    X[index] = 1.0
-                values.append(-np.dot(W, X))
-            height = np.amax(values)
-            Z[j][i] = height
+            height = Q[j][i]
             fout.write(repr(height)+'')
         fout.write('\n')
     fout.close()
 
     ax.set_xticks([-1.2, 0.5])
     ax.set_yticks([-0.07, 0.07])
-    ax.set_zticks([0, np.amax(Z)])
+    ax.set_zticks([0, np.amax(Q)])
     ax.set_xlabel('Position')
     ax.set_ylabel('Velocity')
-    ax.plot_surface(x, y, Z)
+    ax.set_zlabel('Cost to go')
+    ax.plot_surface(x, y, Q)
     plt.show()
 
     print '\nDone!'

@@ -24,7 +24,6 @@ initialWeight = [-0.001, 0.0]
 GAMMA = 1.0  # discount rate
 
 # initialize variables
-Q = None  # action value
 W = None  # weight vector
 Z = None  # action value vector
 last_state = None
@@ -33,28 +32,25 @@ last_tile = None  # tiles of last_state
 
 
 def agent_init():
-    global Q, W
+    global W
 
-    Q = np.zeros([sizeOfTilings[0], sizeOfTilings[1], 3])
     W = np.random.uniform(initialWeight[0], initialWeight[1], (sizeOfTilings[0]+1)*(sizeOfTilings[1]+1)*numTilings*3)
 
 
 def agent_start(state):
-    global last_state, last_action, last_tile, Q, W, Z
-
-    position = int(sizeOfTilings[0]*(state[0]+1.2)/(0.5+1.2))
-    velocity = int(sizeOfTilings[1]*(state[1]+0.07)/(0.07+0.07))
+    global last_state, last_action, last_tile, W, Z
 
     tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
+    Q = np.zeros(3)
     for action in range(3):
         X = np.zeros(len(W))
         for index in tiles(iht, numTilings, tile, [action]):
             X[index] = 1.0
-        Q[position][velocity][action] = np.dot(W, X)
+        Q[action] = np.dot(W, X)
 
     # choose an action
     if rand_un() > EPSILON:
-        action = random.choice(random.choice(np.nonzero(Q[position][velocity] == np.amax(Q[position][velocity]))))
+        action = random.choice(random.choice(np.nonzero(Q == np.amax(Q))))
     else:
         action = rand_in_range(3)
 
@@ -70,32 +66,29 @@ def agent_start(state):
 def agent_step(reward, state):
     global last_state, last_action, last_tile, W, Z
 
-    position = int(sizeOfTilings[0]*(state[0]+1.2)/(0.5+1.2))
-    velocity = int(sizeOfTilings[1]*(state[1]+0.07)/(0.07+0.07))
-
-    TD_error = reward
     for index in tiles(iht, numTilings, last_tile, [last_action]):
-        TD_error -= W[index]
+        reward -= W[index]
         Z[index] = 1  # replacing traces
 
     tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
+    Q = np.zeros(3)
     for action in range(3):
         X = np.zeros(len(W))
         for index in tiles(iht, numTilings, tile, [action]):
             X[index] = 1.0
-        Q[position][velocity][action] = np.dot(W, X)
+        Q[action] = np.dot(W, X)
 
     # choose an action
     if rand_un() > EPSILON:
-        action = random.choice(random.choice(np.nonzero(Q[position][velocity] == np.amax(Q[position][velocity]))))
+        action = random.choice(random.choice(np.nonzero(Q == np.amax(Q))))
     else:
         action = rand_in_range(3)
 
     for index in tiles(iht, numTilings, tile, [action]):
-        TD_error += GAMMA * W[index]
+        reward += GAMMA * W[index]
 
     # update weight vector and eligibility trace vector
-    W += ALPHA * TD_error * Z
+    W += ALPHA * reward * Z
     Z = GAMMA * LAMBDA * Z
 
     last_state = state
@@ -108,14 +101,12 @@ def agent_step(reward, state):
 def agent_end(reward):
     global W, Z
 
-    TD_error = reward
-
     for index in tiles(iht, numTilings, last_tile, [last_action]):
-        TD_error -= W[index]
+        reward -= W[index]
         Z[index] = 1  # replacing traces
 
     # update weight vector
-    W += ALPHA * TD_error * Z
+    W += ALPHA * reward * Z
 
     return
 
@@ -137,6 +128,21 @@ def agent_message(in_message):  # returns string, in_message: string
     """
     # should not need to modify this function. Modify at your own risk
     if in_message == 'ValueFunction':
-        return W
+        steps = 50
+        Q = np.zeros([steps, steps])
+        for i in range(steps):
+            pos = -1.2 + (i * 1.7 / steps)
+            for j in range(steps):
+                vel = -0.07 + (j * 0.14 / steps)
+                values = []
+                for a in range(3):
+                    X = np.zeros(len(W))
+                    for index in tiles(iht, numTilings, [sizeOfTilings[0]*pos/(0.5+1.2), sizeOfTilings[1]*vel/(0.07+0.07)], [a]):
+                        X[index] = 1.0
+                    values.append(-np.dot(W, X))
+                height = np.amax(values)
+                Q[j][i] = height
+
+        return Q
     else:
         return ""
