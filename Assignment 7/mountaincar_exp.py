@@ -20,7 +20,7 @@ import numpy as np
 iht = IHT(4096)
 
 if __name__ == "__main__":
-    '''
+
     # learning curve of Sarsa(lambda) agent
     num_episodes = 200
     num_runs = 50
@@ -36,19 +36,19 @@ if __name__ == "__main__":
             RL_episode(0)
             steps[r,e] = RL_num_steps()
     np.save('steps',steps)
-    '''
+
     # 3D-plot of state-values
     num_episodes = 1000
     num_runs = 1
 
     for r in range(num_runs):
         print "Computing state-values..."
+        RL_agent_message("3D-Plot")
         RL_init()
         for e in range(num_episodes):
             # print '\tepisode {}'.format(e+1)
             RL_episode(0)
-            Q = RL_agent_message("ValueFunction")
-            W = RL_agent_message("WeightVector")
+            W = RL_agent_message("ValueFunction")
 
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')

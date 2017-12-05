@@ -44,18 +44,17 @@ def agent_start(state):
 
     position = int(sizeOfTilings[0]*(state[0]+1.2)/(0.5+1.2))
     velocity = int(sizeOfTilings[1]*(state[1]+0.07)/(0.07+0.07))
-    tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
 
-    if last_action not in range(3):
+    tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
+    for action in range(3):
         X = np.zeros(len(W))
-        for action in range(3):  # call tile coding for all three actions under the starting state
-            for index in tiles(iht, numTilings, tile, [action]):
-                X[index] = 1.0
-            Q[position, velocity, action] = np.dot(W, X)
+        for index in tiles(iht, numTilings, tile, [action]):
+            X[index] = 1.0
+        Q[position][velocity][action] = np.dot(W, X)
 
     # choose an action
     if rand_un() > EPSILON:
-        action = random.choice(random.choice(np.nonzero(Q[position, velocity] == np.amax(Q[position, velocity]))))
+        action = random.choice(random.choice(np.nonzero(Q[position][velocity] == np.amax(Q[position][velocity]))))
     else:
         action = rand_in_range(3)
 
@@ -69,29 +68,31 @@ def agent_start(state):
 
 
 def agent_step(reward, state):
-    global last_state, last_action, last_tile, Q, W, Z
+    global last_state, last_action, last_tile, W, Z
 
     position = int(sizeOfTilings[0]*(state[0]+1.2)/(0.5+1.2))
     velocity = int(sizeOfTilings[1]*(state[1]+0.07)/(0.07+0.07))
-    tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
 
     TD_error = reward
-
     for index in tiles(iht, numTilings, last_tile, [last_action]):
         TD_error -= W[index]
-        Z[index] += 1  # accumulating traces
+        Z[index] = 1  # replacing traces
+
+    tile = [sizeOfTilings[0]*state[0]/(0.5+1.2), sizeOfTilings[1]*state[1]/(0.07+0.07)]
+    for action in range(3):
+        X = np.zeros(len(W))
+        for index in tiles(iht, numTilings, tile, [action]):
+            X[index] = 1.0
+        Q[position][velocity][action] = np.dot(W, X)
 
     # choose an action
     if rand_un() > EPSILON:
-        action = random.choice(random.choice(np.nonzero(Q[position, velocity] == np.amax(Q[position, velocity]))))
+        action = random.choice(random.choice(np.nonzero(Q[position][velocity] == np.amax(Q[position][velocity]))))
     else:
         action = rand_in_range(3)
 
-    X = np.zeros(len(W))
     for index in tiles(iht, numTilings, tile, [action]):
-        X[index] = 1.0
         TD_error += GAMMA * W[index]
-    Q[position, velocity, action] = np.dot(W, X)
 
     # update weight vector and eligibility trace vector
     W += ALPHA * TD_error * Z
@@ -111,7 +112,7 @@ def agent_end(reward):
 
     for index in tiles(iht, numTilings, last_tile, [last_action]):
         TD_error -= W[index]
-        Z[index] += 1  # accumulating traces
+        Z[index] = 1  # replacing traces
 
     # update weight vector
     W += ALPHA * TD_error * Z
@@ -128,23 +129,14 @@ def agent_cleanup():
 
 
 def agent_message(in_message):  # returns string, in_message: string
-    global iht, numTilings, sizeOfTilings, Q, W
+    global W
     """
     Arguments: in_message: string
     returns: The value function as a string.
     This function is complete. You do not need to add code here.
     """
     # should not need to modify this function. Modify at your own risk
-    if in_message == 'LearningCurve':
-        iht = IHT(4096)
-        numTilings = 8
-        sizeOfTilings = [8, 8]
-        return
-    elif in_message == '3D-Plot':
-        return
-    elif in_message == 'ValueFunction':
-        return Q
-    elif in_message == 'WeightVector':
+    if in_message == 'ValueFunction':
         return W
     else:
         return ""
