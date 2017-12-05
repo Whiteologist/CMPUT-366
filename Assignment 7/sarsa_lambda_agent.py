@@ -120,7 +120,6 @@ def agent_cleanup():
 
 
 def agent_message(in_message):  # returns string, in_message: string
-    global W
     """
     Arguments: in_message: string
     returns: The value function as a string.
@@ -128,21 +127,6 @@ def agent_message(in_message):  # returns string, in_message: string
     """
     # should not need to modify this function. Modify at your own risk
     if in_message == 'ValueFunction':
-        steps = 50
-        Q = np.zeros([steps, steps])
-        for i in range(steps):
-            pos = -1.2 + (i * 1.7 / steps)
-            for j in range(steps):
-                vel = -0.07 + (j * 0.14 / steps)
-                values = []
-                for a in range(3):
-                    X = np.zeros(len(W))
-                    for index in tiles(iht, numTilings, [sizeOfTilings[0]*pos/(0.5+1.2), sizeOfTilings[1]*vel/(0.07+0.07)], [a]):
-                        X[index] = 1.0
-                    values.append(-np.dot(W, X))
-                height = np.amax(values)
-                Q[j][i] = height
-
-        return Q
+        return [W, iht]
     else:
         return ""

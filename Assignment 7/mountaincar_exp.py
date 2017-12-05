@@ -11,6 +11,7 @@
 
 import numpy as np
 from rl_glue import *  # Required for RL-Glue
+from tiles3 import *
 from mpl_toolkits.mplot3d import Axes3D
 from matplotlib import pyplot as plt
 RLGlue("mountaincar", "sarsa_lambda_agent")
@@ -24,7 +25,6 @@ if __name__ == "__main__":
 
     for r in range(num_runs):
         print "run number : ", r+1
-        RL_agent_message("LearningCurve")
         RL_init()
         for e in range(num_episodes):
             # print '\tepisode {}'.format(e+1)
@@ -50,11 +50,21 @@ if __name__ == "__main__":
     steps = 50
     x = np.arange(-1.2, 0.5, 1.7 / steps)
     y = np.arange(-0.07, 0.07, 0.14 / steps)
+    Q = np.zeros([steps, steps])
     x, y = np.meshgrid(x, y)
-    Q = RL_agent_message("ValueFunction")
+    [W, iht] = RL_agent_message("ValueFunction")
     for i in range(steps):
+        pos = -1.2 + (i * 1.7 / steps)
         for j in range(steps):
-            height = Q[j][i]
+            vel = -0.07 + (j * 0.14 / steps)
+            values = []
+            for a in range(3):
+                X = np.zeros(len(W))
+                for index in tiles(iht, 8, [8*pos/(0.5+1.2), 8*vel/(0.07+0.07)], [a]):
+                    X[index] = 1.0
+                values.append(-np.dot(W, X))
+            height = np.amax(values)
+            Q[j][i] = height
             fout.write(repr(height)+'')
         fout.write('\n')
     fout.close()
